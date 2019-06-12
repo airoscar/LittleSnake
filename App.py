@@ -3,7 +3,7 @@
 from PyQt5.QtWidgets import QWidget, QApplication
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt
-import sys, random
+import sys
 
 from Models import *
 
@@ -11,9 +11,10 @@ UNIT_SIZE = 20
 
 class Display(QWidget):
     
-    def __init__(self, snake):
+    def __init__(self, snake, apple):
         super().__init__()
         self.snake = snake
+        self.apple = apple
         self.initUI()
         
     def initUI(self):      
@@ -51,12 +52,14 @@ class Display(QWidget):
         elif gey == Qt.Key_Down:
             self.snake.move('down')
         elif gey == Qt.Key_G:
-            self.snake.grow('up')
+            self.snake.grow()
         self.update()
 
 
 if __name__ == '__main__':
-    snake = Snake(100, UNIT_SIZE)
+    yard = Yard(100, UNIT_SIZE)
+    snake = yard.getSnake()
+    apple = yard.getApple()
     app = QApplication(sys.argv)
-    window = Display(snake)
+    window = Display(snake, apple)
     sys.exit(app.exec_())

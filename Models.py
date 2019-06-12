@@ -1,15 +1,59 @@
-import numpy as np
+
 import random
 
 
-BOARD_SIZE = 25
-COAST_FORWARD = True
+class Yard:
+	def __init__(self, board_size, display_unit):
+		self.board_size = board_size
+		self.snake = Snake(self, board_size, display_unit)
+		self.apple = Apple(self, board_size)
+
+	def isSnakeEatingApple(self):
+		x,y = self.snake.head.getPos()
+
+		if x == self.apple.x and y == self.apple.y:
+			return True
+		else:
+			return False
+
+	def isOnSnake(self, x,y):
+		cursor = self.snake.head
+		while cursor is not None:
+			snakeX, snakeY = cursor.getPos()
+			if snakeX == x and snakeY == y:
+				return True
+			cursor = cursor.next
+		return False
+
+	def getSnake(self):
+		return self.snake
+
+	def getApple(self):
+		return self.apple
 
 
-class Game:
-	def __init__(self, board_size):
-		self.yard = np.zeros([board_size, board_size], dtype=int)
-		self.snake = Snake(board_size)
+class Apple:
+	def __init__(self, yard, board_size):
+		self.x = None
+		self.y = None
+		self.yard = yard
+		self.board_size = board_size
+		self.respawn()
+
+	def respawn(self):
+
+		x = random.randint(0, self.board_size)
+		y = random.randint(0, self.board_size)
+		print(x, y)
+
+		while self.yard.isOnSnake(x,y):
+
+			x = random.randint(0, self.board_size)
+			y = random.randint(0, self.board_size)
+			print(x, y)
+
+		self.x = x
+		self.y = y
 
 
 class Node:
@@ -40,11 +84,13 @@ class Node:
 
 
 class Snake:
-	def __init__(self, board_size, display_unit):
+	def __init__(self, yard, board_size, display_unit):
 		self.head = Node(random.randint(0,board_size), random.randint(0,board_size))
 		self.length = 1
 		self.board_size = board_size
 		self.display_unit = display_unit
+		self.yard = yard
+		self.growMode = False
 
 	def direction(self):
 		pass
@@ -55,12 +101,15 @@ class Snake:
 
 		cursor = self.head
 		i = 1
-		while cursor.hasNext:
+		while cursor.hasNext():
 			i += 1
-			cursor = cursor.nextNode
+			cursor = cursor.next
 		return i
+
+	def grow(self):
+		self.growMode = not self.growMode
 		
-	def grow(self, dir):
+	def growMove(self, dir):
 		self.length += 1
 		curHead = self.head
 		x,y = curHead.getPos()
@@ -91,16 +140,22 @@ class Snake:
 
 	def move(self, dir):
 
-		cursor = self.head
-		x,y = self.__nodeShift(*cursor.getPos(), dir)
+		if self.growMode is True:
+			self.growMove(dir)
 
-		while cursor is not None:
+		else:
+			cursor = self.head
+			x,y = self.__nodeShift(*cursor.getPos(), dir)
 
-			oldX, oldY = cursor.getPos()
-			cursor.setPos(x,y)
-			x = oldX
-			y = oldY
-			cursor = cursor.next
+			while cursor is not None:
 
-		self.printNodes()
+				oldX, oldY = cursor.getPos()
+				cursor.setPos(x,y)
+				x = oldX
+				y = oldY
+				cursor = cursor.next
+
+			if self.yard.isSnakeEatingApple():
+				self.grow()
+				self.yard.apple.respawn()
 
