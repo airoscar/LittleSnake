@@ -7,6 +7,8 @@ import sys, random
 
 from Models import *
 
+UNIT_SIZE = 20
+
 class Display(QWidget):
     
     def __init__(self, snake):
@@ -19,20 +21,22 @@ class Display(QWidget):
         self.setGeometry(0, 0, 1000, 600)
         self.setWindowTitle('Snake')
         self.show()
-        
 
     def paintEvent(self, e):
         qp = QPainter()
         qp.begin(self)
-        self.drawNode(qp)
+        self.drawSnake(qp)
         qp.end()
         
-    def drawNode(self, qp):
+    def drawSnake(self, qp):
         qp.setPen(Qt.red)
-        size = self.size()
-        x,y = snake.getHead().getPos()
-        qp.drawRect(x, y, 20 , 20)
-        # qp.end()
+        cursor = snake.head
+
+        while cursor is not None:
+            x,y = cursor.getPos()
+            # print(f'draw node {i}: x={x}, y={y}')
+            qp.drawRect(x, y, UNIT_SIZE, UNIT_SIZE)
+            cursor = cursor.next
 
 
     def keyPressEvent(self, event):
@@ -46,11 +50,13 @@ class Display(QWidget):
             self.snake.move('left')
         elif gey == Qt.Key_Down:
             self.snake.move('down')
+        elif gey == Qt.Key_G:
+            self.snake.grow('up')
         self.update()
 
 
 if __name__ == '__main__':
-    snake = Snake(100,5)
+    snake = Snake(100, UNIT_SIZE)
     app = QApplication(sys.argv)
     window = Display(snake)
     sys.exit(app.exec_())

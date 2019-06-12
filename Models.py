@@ -5,13 +5,14 @@ import random
 BOARD_SIZE = 25
 COAST_FORWARD = True
 
-class Game():
+
+class Game:
 	def __init__(self, board_size):
 		self.yard = np.zeros([board_size, board_size], dtype=int)
 		self.snake = Snake(board_size)
 
 
-class Node():
+class Node:
 	def __init__(self, x, y):
 		self.next = None
 		self.previous = None
@@ -23,7 +24,7 @@ class Node():
 		self.y = y
 
 	def hasNext(self):
-		if self.nextNode is None:
+		if self.next is None:
 			return False
 		else:
 			return True
@@ -37,21 +38,13 @@ class Node():
 	def getPos(self):
 		return (self.x, self.y)
 
-	def next(self):
-		return self.next
 
-	def previous(self):
-		return self.previous
-
-class Snake():
+class Snake:
 	def __init__(self, board_size, display_unit):
 		self.head = Node(random.randint(0,board_size), random.randint(0,board_size))
 		self.length = 1
 		self.board_size = board_size
 		self.display_unit = display_unit
-
-	def getHead(self):
-		return self.head
 
 	def direction(self):
 		pass
@@ -67,14 +60,23 @@ class Snake():
 			cursor = cursor.nextNode
 		return i
 		
-	def grow(self, growth, dir):	
+	def grow(self, dir):
 		self.length += 1
-		x,y = self.head.getPos()
-		self.__nodeShift(x,y,dir)
-		newHead = Node(x,y)
+		curHead = self.head
+		x,y = curHead.getPos()
+		newX,newY = self.__nodeShift(x,y,dir)
+		newHead = Node(newX,newY)
 		newHead.setNext(self.head)
-		self.head.setPrevious(newHead)
+		curHead.setPrevious(newHead)
 		self.head = newHead
+		self.printNodes()
+
+	def printNodes(self):
+		cursor = self.head
+		while cursor is not None:
+			print(cursor.getPos())
+			cursor = cursor.next
+
 
 	def __nodeShift(self, x, y, dir):
 		if dir == 'up':
@@ -85,11 +87,20 @@ class Snake():
 			x -= self.display_unit
 		elif dir == 'right':
 			x += self.display_unit
-		return x,y
+		return (x,y)
 
 	def move(self, dir):
-		x,y = self.head.getPos()
-		x,y = self.__nodeShift(x,y, dir)
-		self.head.setPos(x,y)
 
-			
+		cursor = self.head
+		x,y = self.__nodeShift(*cursor.getPos(), dir)
+
+		while cursor is not None:
+
+			oldX, oldY = cursor.getPos()
+			cursor.setPos(x,y)
+			x = oldX
+			y = oldY
+			cursor = cursor.next
+
+		self.printNodes()
+
