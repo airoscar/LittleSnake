@@ -3,9 +3,9 @@ import random
 
 
 class Yard:
-	def __init__(self, board_size, display_unit):
+	def __init__(self, board_size):
 		self.board_size = board_size
-		self.snake = Snake(self, board_size, display_unit)
+		self.snake = Snake(self, board_size)
 		self.apple = Apple(self, board_size)
 
 	def isSnakeEatingApple(self):
@@ -44,16 +44,14 @@ class Apple:
 
 		x = random.randint(0, self.board_size)
 		y = random.randint(0, self.board_size)
-		print(x, y)
 
 		while self.yard.isOnSnake(x,y):
-
 			x = random.randint(0, self.board_size)
 			y = random.randint(0, self.board_size)
-			print(x, y)
 
 		self.x = x
 		self.y = y
+		print(f" Apple spawned at {x},{y}")
 
 
 class Node:
@@ -84,11 +82,10 @@ class Node:
 
 
 class Snake:
-	def __init__(self, yard, board_size, display_unit):
+	def __init__(self, yard, board_size):
 		self.head = Node(random.randint(0,board_size), random.randint(0,board_size))
 		self.length = 1
 		self.board_size = board_size
-		self.display_unit = display_unit
 		self.yard = yard
 		self.growMode = False
 
@@ -118,7 +115,7 @@ class Snake:
 		newHead.setNext(self.head)
 		curHead.setPrevious(newHead)
 		self.head = newHead
-		self.printNodes()
+		self.grow()
 
 	def printNodes(self):
 		cursor = self.head
@@ -129,13 +126,13 @@ class Snake:
 
 	def __nodeShift(self, x, y, dir):
 		if dir == 'up':
-			y -= self.display_unit
+			y -= 1
 		elif dir == 'down':
-			y += self.display_unit
+			y += 1
 		elif dir == 'left':
-			x -= self.display_unit
+			x -= 1
 		elif dir == 'right':
-			x += self.display_unit
+			x += 1
 		return (x,y)
 
 	def move(self, dir):
@@ -158,4 +155,6 @@ class Snake:
 			if self.yard.isSnakeEatingApple():
 				self.grow()
 				self.yard.apple.respawn()
+
+		print(f"Snake at {self.head.getPos()}")
 

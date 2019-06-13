@@ -8,6 +8,8 @@ import sys
 from Models import *
 
 UNIT_SIZE = 20
+GAME_SIZE = 30
+GAME_MARGIN = 20
 
 class Display(QWidget):
     
@@ -18,23 +20,33 @@ class Display(QWidget):
         self.initUI()
         
     def initUI(self):      
-
-        self.setGeometry(0, 0, 1000, 600)
+        display_size = GAME_SIZE * UNIT_SIZE + GAME_MARGIN * 2
+        self.setGeometry(0, 0, display_size, display_size)
         self.setWindowTitle('Snake')
         self.show()
 
     def paintEvent(self, e):
         qp = QPainter()
         qp.begin(self)
+        self.drawApple(qp)
         self.drawSnake(qp)
         qp.end()
+
+    def drawApple(self, qp):
+        qp.setPen(Qt.red)
+        x = self.apple.x * UNIT_SIZE
+        y = self.apple.y * UNIT_SIZE
+        qp.drawRect(x, y, UNIT_SIZE, UNIT_SIZE)
+
         
     def drawSnake(self, qp):
-        qp.setPen(Qt.red)
+        qp.setPen(Qt.green)
         cursor = snake.head
 
         while cursor is not None:
             x,y = cursor.getPos()
+            x *= UNIT_SIZE
+            y *= UNIT_SIZE
             # print(f'draw node {i}: x={x}, y={y}')
             qp.drawRect(x, y, UNIT_SIZE, UNIT_SIZE)
             cursor = cursor.next
@@ -53,11 +65,13 @@ class Display(QWidget):
             self.snake.move('down')
         elif gey == Qt.Key_G:
             self.snake.grow()
+        elif gey == Qt.Key_A:
+            self.apple.respawn()
         self.update()
 
 
 if __name__ == '__main__':
-    yard = Yard(100, UNIT_SIZE)
+    yard = Yard(GAME_SIZE)
     snake = yard.getSnake()
     apple = yard.getApple()
     app = QApplication(sys.argv)
