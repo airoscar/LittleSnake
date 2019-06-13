@@ -6,6 +6,7 @@ from PyQt5.QtCore import Qt
 import sys
 
 from Models import *
+from ML import *
 
 UNIT_SIZE = 20
 GAME_SIZE = 30
@@ -13,10 +14,11 @@ GAME_MARGIN = 20
 
 class Display(QWidget):
     
-    def __init__(self, snake, apple):
+    def __init__(self, snake, apple, enableInput):
         super().__init__()
         self.snake = snake
         self.apple = apple
+        self.enableInput = enableInput
         self.initUI()
         
     def initUI(self):      
@@ -59,24 +61,24 @@ class Display(QWidget):
 
 
     def keyPressEvent(self, event):
-        gey = event.key()
-        # self.func = (None, None)
-        if gey == Qt.Key_Up:
-            self.snake.move(0)
-        elif gey == Qt.Key_Down:
-            self.snake.move(1)
-        elif gey == Qt.Key_Left:
-            self.snake.move(2)
-        elif gey == Qt.Key_Right:
-            self.snake.move(3)
-        elif gey == Qt.Key_G:
-            self.snake.grow()
-        elif gey == Qt.Key_A:
-            self.apple.respawn()
-        elif gey == Qt.Key_R:
-            self.snake.respawn()
-            self.apple.respawn()
-        self.update()
+        if self.enableInput is True:
+            gey = event.key()
+            if gey == Qt.Key_Up:
+                self.snake.move(0)
+            elif gey == Qt.Key_Down:
+                self.snake.move(1)
+            elif gey == Qt.Key_Left:
+                self.snake.move(2)
+            elif gey == Qt.Key_Right:
+                self.snake.move(3)
+            elif gey == Qt.Key_G:
+                self.snake.grow()
+            elif gey == Qt.Key_A:
+                self.apple.respawn()
+            elif gey == Qt.Key_R:
+                self.snake.respawn()
+                self.apple.respawn()
+            self.update()
 
 
 if __name__ == '__main__':
@@ -84,5 +86,10 @@ if __name__ == '__main__':
     snake = yard.getSnake()
     apple = yard.getApple()
     app = QApplication(sys.argv)
-    window = Display(snake, apple)
+    if len(sys.argv) > 1:                       # user mode
+        window = Display(snake, apple, True)
+    else:                                       # reinforcement learning mode
+        window = Display(snake, apple, False)
+
+        learner = QLearner(yard, 0.2, 0.8, 10000, window)   # epsilon, gamma, epochs
     sys.exit(app.exec_())

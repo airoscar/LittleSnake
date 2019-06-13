@@ -1,6 +1,10 @@
 
 import random
+import numpy as np
 
+REWARD_APPLE = 10
+REWARD_COLLISION = -20
+REWARD_APPROACH = 2
 
 class Yard:
 	def __init__(self, board_size):
@@ -42,18 +46,17 @@ class Yard:
 	def getApple(self):
 		return self.apple
 
-	def checkCollision(self):
-		snakeX, snakeY = self.snake.head.getPos()
+	def checkCollision(self, x, y):
 
-		if snakeX <= 0:
+		if x <= 0:
 			return True
-		if snakeX > self.board_size:
+		if x > self.board_size:
 			return True
-		if snakeY <= 0:
+		if y <= 0:
 			return True
-		if snakeY > self.board_size:
+		if y > self.board_size:
 			return True
-		if self.isOnSnakeBody(snakeX, snakeY):
+		if self.isOnSnakeBody(x, y):
 			return True
 
 		return False
@@ -78,7 +81,7 @@ class Apple:
 
 		self.x = x
 		self.y = y
-		print(f" Apple spawned at {x},{y}")
+		# print(f" Apple spawned at {x},{y}")
 
 
 class Node:
@@ -122,7 +125,7 @@ class Snake:
 		self.length = 1
 		self.steps = 0
 		self.growMode = False
-		print("Snake respawned")
+		# print("Snake respawned")
 
 	def updateLength(self):
 		if self.head is None:
@@ -152,7 +155,7 @@ class Snake:
 	def printNodes(self):
 		cursor = self.head
 		while cursor is not None:
-			print(cursor.getPos())
+			# print(cursor.getPos())
 			cursor = cursor.next
 
 
@@ -168,6 +171,10 @@ class Snake:
 		return (x,y)
 
 	def move(self, dir):
+
+		reward = 0
+		gameover = False
+
 		self.steps += 1
 
 		if self.growMode is True:
@@ -186,12 +193,56 @@ class Snake:
 				cursor = cursor.next
 
 			if self.yard.isSnakeEatingApple():
+				reward = REWARD_APPLE
 				self.grow()
 				self.yard.apple.respawn()
 
-		print(f"Score={self.length}, steps={self.steps}")
+		# print(f"Score={self.length}, steps={self.steps}")
 
-		if self.yard.checkCollision():
-			self.respawn()
+		if self.yard.checkCollision(*self.head.getPos()):
+			reward = REWARD_COLLISION
+			gameover = True
+			# self.respawn()
+
+		state = self.__buildState()
+		# print(state)
+		score = self.length
+
+		return state, reward, gameover, score, self.steps
+
+	def __buildState(self):
+		state = np.zeros(8, dtype=int)
+		for i in range(4):
+			state[i] = self.yard.checkCollision(*self.vicinityPosition(i))
+		state[4:] = self.__foodDirections()
+		return state
+
+	def __foodDirections(self):
+		state = np.zeros(4, dtype=int)
+
+		distX = self.yard.apple.x - self.head.getPos()[0]
+		distY = self.yard.apple.y - self.head.getPos()[1]
+
+		if distY < 0:		# up
+			state[0] = 1
+		if distY > 0:		# down
+			state[1] = 1
+		if distX < 0:		# left
+			state[2] = 1
+		if distX > 0:		# right
+			state[3] = 1
+
+		return state
 
 
+	def vicinityPosition(self, dir):
+		x,y = self.head.getPos()
+		if dir == 0:
+			y -= 1
+		elif dir == 1:
+			y += 1
+		elif dir == 2:
+			x -= 1
+		elif dir == 3:
+			x += 1
+		return x,y
