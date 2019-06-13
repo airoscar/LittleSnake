@@ -28,19 +28,25 @@ class Display(QWidget):
     def paintEvent(self, e):
         qp = QPainter()
         qp.begin(self)
+        self.drawYard(qp)
         self.drawApple(qp)
         self.drawSnake(qp)
         qp.end()
+
+    def drawYard(self, qp):
+        qp.setPen(Qt.green)
+        yard_size = GAME_SIZE * UNIT_SIZE
+        qp.drawRect(GAME_MARGIN, GAME_MARGIN, yard_size, yard_size)
 
     def drawApple(self, qp):
         qp.setPen(Qt.red)
         x = self.apple.x * UNIT_SIZE
         y = self.apple.y * UNIT_SIZE
-        qp.drawRect(x, y, UNIT_SIZE, UNIT_SIZE)
+        qp.drawEllipse(x, y, UNIT_SIZE, UNIT_SIZE)
 
         
     def drawSnake(self, qp):
-        qp.setPen(Qt.green)
+        qp.setPen(Qt.black)
         cursor = snake.head
 
         while cursor is not None:
@@ -66,6 +72,9 @@ class Display(QWidget):
         elif gey == Qt.Key_G:
             self.snake.grow()
         elif gey == Qt.Key_A:
+            self.apple.respawn()
+        elif gey == Qt.Key_R:
+            self.snake.respawn()
             self.apple.respawn()
         self.update()
 

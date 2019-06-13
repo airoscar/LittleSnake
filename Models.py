@@ -25,11 +25,38 @@ class Yard:
 			cursor = cursor.next
 		return False
 
+	def isOnSnakeBody(self, x,y):
+		cursor = self.snake.head.next
+		if cursor is not None:
+			while cursor is not None:
+				snakeX, snakeY = cursor.getPos()
+				if snakeX == x and snakeY == y:
+					return True
+				cursor = cursor.next
+			return False
+
+
 	def getSnake(self):
 		return self.snake
 
 	def getApple(self):
 		return self.apple
+
+	def checkCollision(self):
+		snakeX, snakeY = self.snake.head.getPos()
+
+		if snakeX <= 0:
+			return True
+		if snakeX >= self.board_size:
+			return True
+		if snakeY <= 0:
+			return True
+		if snakeY >= self.board_size:
+			return True
+		if self.isOnSnakeBody(snakeX, snakeY):
+			return True
+
+		return False
 
 
 class Apple:
@@ -42,12 +69,12 @@ class Apple:
 
 	def respawn(self):
 
-		x = random.randint(0, self.board_size)
-		y = random.randint(0, self.board_size)
+		x = random.randint(1, self.board_size)
+		y = random.randint(1, self.board_size)
 
 		while self.yard.isOnSnake(x,y):
-			x = random.randint(0, self.board_size)
-			y = random.randint(0, self.board_size)
+			x = random.randint(1, self.board_size)
+			y = random.randint(1, self.board_size)
 
 		self.x = x
 		self.y = y
@@ -83,14 +110,15 @@ class Node:
 
 class Snake:
 	def __init__(self, yard, board_size):
-		self.head = Node(random.randint(0,board_size), random.randint(0,board_size))
-		self.length = 1
 		self.board_size = board_size
 		self.yard = yard
-		self.growMode = False
+		self.respawn()
 
-	def direction(self):
-		pass
+	def respawn(self):
+		self.head = Node(random.randint(1, self.board_size), random.randint(1, self.board_size))
+		self.length = 1
+		self.growMode = False
+		print("Snake respawned")
 
 	def updateLength(self):
 		if self.head is None:
@@ -157,4 +185,6 @@ class Snake:
 				self.yard.apple.respawn()
 
 		print(f"Snake at {self.head.getPos()}")
+		if self.yard.checkCollision():
+			self.respawn()
 
