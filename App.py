@@ -62,13 +62,13 @@ class Display(QWidget):
         gey = event.key()
         # self.func = (None, None)
         if gey == Qt.Key_Up:
-            self.snake.move('up')
-        elif gey == Qt.Key_Right:
-            self.snake.move('right')
-        elif gey == Qt.Key_Left:
-            self.snake.move('left')
+            self.snake.move(0)
         elif gey == Qt.Key_Down:
-            self.snake.move('down')
+            self.snake.move(1)
+        elif gey == Qt.Key_Left:
+            self.snake.move(2)
+        elif gey == Qt.Key_Right:
+            self.snake.move(3)
         elif gey == Qt.Key_G:
             self.snake.grow()
         elif gey == Qt.Key_A:

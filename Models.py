@@ -47,11 +47,11 @@ class Yard:
 
 		if snakeX <= 0:
 			return True
-		if snakeX >= self.board_size:
+		if snakeX > self.board_size:
 			return True
 		if snakeY <= 0:
 			return True
-		if snakeY >= self.board_size:
+		if snakeY > self.board_size:
 			return True
 		if self.isOnSnakeBody(snakeX, snakeY):
 			return True
@@ -112,11 +112,15 @@ class Snake:
 	def __init__(self, yard, board_size):
 		self.board_size = board_size
 		self.yard = yard
+		self.length = 1
+		self.head = None
+		self.steps = 0
 		self.respawn()
 
 	def respawn(self):
 		self.head = Node(random.randint(1, self.board_size), random.randint(1, self.board_size))
 		self.length = 1
+		self.steps = 0
 		self.growMode = False
 		print("Snake respawned")
 
@@ -153,17 +157,18 @@ class Snake:
 
 
 	def __nodeShift(self, x, y, dir):
-		if dir == 'up':
+		if dir == 0:	# up
 			y -= 1
-		elif dir == 'down':
+		elif dir == 1:	# down
 			y += 1
-		elif dir == 'left':
+		elif dir == 2:	# left
 			x -= 1
-		elif dir == 'right':
+		elif dir == 3:	# right
 			x += 1
 		return (x,y)
 
 	def move(self, dir):
+		self.steps += 1
 
 		if self.growMode is True:
 			self.growMove(dir)
@@ -184,7 +189,9 @@ class Snake:
 				self.grow()
 				self.yard.apple.respawn()
 
-		print(f"Snake at {self.head.getPos()}")
+		print(f"Score={self.length}, steps={self.steps}")
+
 		if self.yard.checkCollision():
 			self.respawn()
+
 
