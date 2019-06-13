@@ -9,7 +9,7 @@ from Models import *
 from ML import *
 
 UNIT_SIZE = 20
-GAME_SIZE = 30
+GAME_SIZE = 16
 GAME_MARGIN = 20
 
 class Display(QWidget):
@@ -79,6 +79,7 @@ class Display(QWidget):
                 self.snake.respawn()
                 self.apple.respawn()
             self.update()
+            # print(f"Score: {self.snake.length}, Steps: {self.snake.steps}")
 
 
 if __name__ == '__main__':
@@ -91,5 +92,5 @@ if __name__ == '__main__':
     else:                                       # reinforcement learning mode
         window = Display(snake, apple, False)
 
-        learner = QLearner(yard, 0.2, 0.8, 10000, window)   # epsilon, gamma, epochs
+        learner = QLearner(yard, 0.3, 0.9, 5000, window)   # epsilon, gamma, epochs
     sys.exit(app.exec_())

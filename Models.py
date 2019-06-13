@@ -2,9 +2,10 @@
 import random
 import numpy as np
 
-REWARD_APPLE = 10
-REWARD_COLLISION = -20
+REWARD_APPLE = 5
+REWARD_COLLISION = -2
 REWARD_APPROACH = 2
+MAX_STEPS_WITHOUT_SCORE = 100
 
 class Yard:
 	def __init__(self, board_size):
@@ -118,12 +119,14 @@ class Snake:
 		self.length = 1
 		self.head = None
 		self.steps = 0
+		self.stepsSinceLastScore = 0
 		self.respawn()
 
 	def respawn(self):
 		self.head = Node(random.randint(1, self.board_size), random.randint(1, self.board_size))
 		self.length = 1
 		self.steps = 0
+		self.stepsSinceLastScore = 0
 		self.growMode = False
 		# print("Snake respawned")
 
@@ -143,6 +146,7 @@ class Snake:
 		
 	def growMove(self, dir):
 		self.length += 1
+		self.stepsSinceLastScore = 0
 		curHead = self.head
 		x,y = curHead.getPos()
 		newX,newY = self.__nodeShift(x,y,dir)
@@ -175,7 +179,11 @@ class Snake:
 		reward = 0
 		gameover = False
 
+		if self.__doesApproachFood(dir):
+			reward = REWARD_APPROACH
+
 		self.steps += 1
+		self.stepsSinceLastScore += 1
 
 		if self.growMode is True:
 			self.growMove(dir)
@@ -199,23 +207,51 @@ class Snake:
 
 		# print(f"Score={self.length}, steps={self.steps}")
 
-		if self.yard.checkCollision(*self.head.getPos()):
+
+		if self.yard.checkCollision(*self.head.getPos()) or self.stepsSinceLastScore > MAX_STEPS_WITHOUT_SCORE:
 			reward = REWARD_COLLISION
 			gameover = True
 			# self.respawn()
 
-		state = self.__buildState()
+		state = self.getState()
 		# print(state)
 		score = self.length
+		steps = self.steps
 
-		return state, reward, gameover, score, self.steps
 
-	def __buildState(self):
+		if gameover is True:
+			self.respawn()
+
+		return state, reward, gameover, score, steps
+
+	def getState(self):
 		state = np.zeros(8, dtype=int)
 		for i in range(4):
 			state[i] = self.yard.checkCollision(*self.vicinityPosition(i))
 		state[4:] = self.__foodDirections()
-		return state
+
+		return self.__listToInt(state)
+
+	def __listToInt(self, lst):
+
+		return int("".join(str(x) for x in lst), 2)
+
+
+	def __doesApproachFood(self, dir):
+		foodDir = self.__foodDirections()
+		# print (foodDir)
+		if dir == 0 and foodDir[0] > 0:
+			return True
+		elif dir == 1 and foodDir[1] > 0:
+			return True
+		elif dir == 2 and foodDir[2] > 0:
+			return True
+		elif dir == 3 and foodDir[3] > 0:
+			return True
+		else:
+			return False
+
+
 
 	def __foodDirections(self):
 		state = np.zeros(4, dtype=int)
