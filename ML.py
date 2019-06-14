@@ -1,21 +1,21 @@
-from Models import *
+
 import random
 import numpy as np
-import time
 
 class QLearner:
 
-    def __init__(self, game, epsilon, gamma, epochs, UI):
+    def __init__(self, game, epsilon, gamma, epochs, testEpochs, UI):
         self.game = game
         self.epsilon = epsilon
         self.gamma = gamma
         self.epochs = epochs
+        self.testEpochs = testEpochs
         self.UI = UI
         self.qTable = []
         self.scores = []
         self.initialize()
-        self.train()
-        self.run()
+        # self.train()
+        # self.run()
 
     def initialize(self):
         numStates = 2 ** 8
@@ -48,7 +48,7 @@ class QLearner:
 
         print("Testing...")
 
-        for i in range(50):
+        for i in range(self.testEpochs):
 
             gameover = False
             state = self.game.snake.getState()
