@@ -1,17 +1,17 @@
 #!/usr/bin/python
 
 from PyQt5.QtWidgets import QWidget, QApplication, QVBoxLayout, QLabel, QPushButton, QLineEdit, QMessageBox
-from PyQt5.QtGui import QPainter
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtGui import QPainter, QPixmap
+from PyQt5.QtCore import Qt, pyqtSlot, QRect
 import sys
 
 from ML import *
 from Models import *
 import time
 
-UNIT_SIZE = 20
+UNIT_SIZE = 30
 GAME_SIZE = 16
-GAME_MARGIN = 20
+GAME_MARGIN = UNIT_SIZE
 EPSILON = 0.3
 GAMMA = 0.9
 TRAIN_EPOCHS = 5000
@@ -58,8 +58,13 @@ class GameDisplay(QWidget):
         self.drawAppleGraphics(x, y, qp)
 
     def drawAppleGraphics(self, x, y, qp):
-        qp.setPen(Qt.red)
-        qp.drawEllipse(x, y, UNIT_SIZE, UNIT_SIZE)
+        # qp.setPen(Qt.red)
+        # qp.drawEllipse(x, y, UNIT_SIZE, UNIT_SIZE)
+        r = QRect(x, y, UNIT_SIZE, UNIT_SIZE)
+        image_path = "img/avacado.jpg"
+        pixmap = QPixmap(image_path)
+        pixmap = pixmap.scaled(r.size())
+        qp.drawPixmap(r, pixmap)
 
     def drawSnake(self, qp):
         cursor = self.snake.head
@@ -72,8 +77,13 @@ class GameDisplay(QWidget):
             cursor = cursor.next
 
     def drawSnakeNodeGraphics(self, x, y, qp):
-        qp.setPen(Qt.black)
-        qp.drawRect(x, y, UNIT_SIZE, UNIT_SIZE)
+        # qp.setPen(Qt.black)
+        # qp.drawRect(x, y, UNIT_SIZE, UNIT_SIZE)
+        r = QRect(x, y, UNIT_SIZE, UNIT_SIZE)
+        image_path = "img/eiden.jpg"
+        pixmap = QPixmap(image_path)
+        pixmap = pixmap.scaled(r.size())
+        qp.drawPixmap(r, pixmap)
 
     def keyPressEvent(self, event):
         if self.enableInput is True:
@@ -97,8 +107,8 @@ class GameDisplay(QWidget):
             # print(f"Score: {self.snake.length}, Steps: {self.snake.steps}")
 
     def drawReplay(self, qp):
-        print("Replaying: ")
-        print(self.replayData)
+        print("Replaying.. ")
+        # print(self.replayData)
 
         if self.replayCounter > len(self.replayData):
             self.replayCounter = 0
