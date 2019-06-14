@@ -1,6 +1,8 @@
 
 import random
 import numpy as np
+import time
+
 
 class QLearner:
 
@@ -29,20 +31,21 @@ class QLearner:
         for gameInstance in range(self.epochs):
 
             # initial move
-            state, reward, gameover, score, steps = self.game.snake.move(random.randint(0,3))
+            state, reward, gameover, score, steps = self.game.snake.move(
+                random.randint(0, 3))
 
             while not gameover:
                 action = self.__actionEncoder(state)
-                future_state, reward, gameover, score, steps = self.game.snake.move(action)
-                self.UI.update()
-                self.qTable[state, action] = reward + self.gamma * np.max(self.qTable[future_state,:])
+                future_state, reward, gameover, score, steps = self.game.snake.move(
+                    action)
+                self.qTable[state, action] = reward + \
+                    self.gamma * np.max(self.qTable[future_state, :])
                 state = future_state
                 # print(state)
             # print(f"Train session: score {score}, steps {steps}")
-        print("Training finished")
+        print("Training finished, QTable: ")
 
         self.printQTable()
-
 
     def run(self):
 
@@ -55,8 +58,8 @@ class QLearner:
             action = np.argmax(self.qTable[state, :])
 
             while not gameover:
-                self.UI.update()
-                state, reward, gameover, score, steps = self.game.snake.move(action)
+                state, reward, gameover, score, steps = self.game.snake.move(
+                    action)
                 action = np.argmax(self.qTable[state, :])
 
             self.scores.append(score)
@@ -64,11 +67,9 @@ class QLearner:
             print(f"Game {i}, score: {score}, steps: {steps}")
         print(f"Highest score: {max(self.scores)}")
 
-
     def printQTable(self):
         for row in self.qTable:
             print(row)
-
 
     def __epsilonSwtich(self):
         """Returns True or False based on epsilon threshold and randomness"""
@@ -81,6 +82,6 @@ class QLearner:
         """Returns an action given a state"""
 
         if self.__epsilonSwtich():
-            return random.randint(0,3)
+            return random.randint(0, 3)
         else:
             return np.argmax(self.qTable[state, :])

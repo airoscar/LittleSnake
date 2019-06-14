@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
-from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QMessageBox
+from PyQt5.QtWidgets import QWidget, QApplication, QVBoxLayout, QLabel, QPushButton, QLineEdit, QMessageBox
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt, pyqtSlot
 import sys
 
 from ML import *
 from Models import *
+import time
 
 UNIT_SIZE = 20
 GAME_SIZE = 16
@@ -16,16 +17,19 @@ GAMMA = 0.9
 TRAIN_EPOCHS = 5000
 TEST_EPOCHS = 50
 
+
 class GameDisplay(QWidget):
-    
+
     def __init__(self, snake, apple):
         super(QWidget, self).__init__()
         self.snake = snake
         self.apple = apple
         self.enableInput = True
+        self.replayData = []
+        self.replayCounter = 0
         self.initUI()
-        
-    def initUI(self):      
+
+    def initUI(self):
         display_size = GAME_SIZE * UNIT_SIZE + GAME_MARGIN * 2
         self.setGeometry(0, 0, display_size, display_size)
         self.setWindowTitle('Snake')
@@ -35,8 +39,12 @@ class GameDisplay(QWidget):
         qp = QPainter()
         qp.begin(self)
         self.drawYard(qp)
-        self.drawApple(qp)
-        self.drawSnake(qp)
+        if self.replayCounter == 0:
+            self.drawApple(qp)
+            self.drawSnake(qp)
+        else:
+            self.drawReplay(qp)
+
         qp.end()
 
     def drawYard(self, qp):
@@ -45,24 +53,27 @@ class GameDisplay(QWidget):
         qp.drawRect(GAME_MARGIN, GAME_MARGIN, yard_size, yard_size)
 
     def drawApple(self, qp):
-        qp.setPen(Qt.red)
         x = self.apple.x * UNIT_SIZE
         y = self.apple.y * UNIT_SIZE
+        self.drawAppleGraphics(x, y, qp)
+
+    def drawAppleGraphics(self, x, y, qp):
+        qp.setPen(Qt.red)
         qp.drawEllipse(x, y, UNIT_SIZE, UNIT_SIZE)
 
-        
     def drawSnake(self, qp):
-        qp.setPen(Qt.black)
         cursor = self.snake.head
-
         while cursor is not None:
-            x,y = cursor.getPos()
+            x, y = cursor.getPos()
             x *= UNIT_SIZE
             y *= UNIT_SIZE
             # print(f'draw node {i}: x={x}, y={y}')
-            qp.drawRect(x, y, UNIT_SIZE, UNIT_SIZE)
+            self.drawSnakeNodeGraphics(x, y, qp)
             cursor = cursor.next
 
+    def drawSnakeNodeGraphics(self, x, y, qp):
+        qp.setPen(Qt.black)
+        qp.drawRect(x, y, UNIT_SIZE, UNIT_SIZE)
 
     def keyPressEvent(self, event):
         if self.enableInput is True:
@@ -85,12 +96,31 @@ class GameDisplay(QWidget):
             self.update()
             # print(f"Score: {self.snake.length}, Steps: {self.snake.steps}")
 
+    def drawReplay(self, qp):
+        print("Replaying: ")
+        print(self.replayData)
+
+        if self.replayCounter > len(self.replayData):
+            self.replayCounter = 0
+        else:
+            # get snapshot
+            snake, apple = self.replayData[self.replayCounter-1]
+            self.drawAppleGraphics(
+                apple[0] * UNIT_SIZE, apple[1] * UNIT_SIZE, qp)
+            for node in snake:
+                self.drawSnakeNodeGraphics(
+                    node[0] * UNIT_SIZE, node[1] * UNIT_SIZE, qp)
+            self.replayCounter += 1
+            self.update()
+            time.sleep(0.1)
+
 
 class Controls(QWidget):
-    def __init__(self, gameDisplay, learner):
+    def __init__(self, gameDisplay, learner, yard):
         super(QWidget, self).__init__()
         self.gameDisplay = gameDisplay
         self.learner = learner
+        self.yard = yard
 
         vbox = QVBoxLayout()
         epsilonLabel = QLabel("Epsilon")
@@ -111,6 +141,7 @@ class Controls(QWidget):
 
         self.trainButton.clicked.connect(self.trainButtonPressed)
         self.testButton.clicked.connect(self.testButtonPressed)
+        self.replayButton.clicked.connect(self.replayButtonPressed)
 
         vbox.addWidget(epsilonLabel)
         vbox.addWidget(self.epsilonInput)
@@ -148,7 +179,13 @@ class Controls(QWidget):
         self.learner.run()
         self.gameDisplay.enableInput = True
 
-
+    @pyqtSlot()
+    def replayButtonPressed(self):
+        self.gameDisplay.enableInput = False
+        self.gameDisplay.replayData = self.yard.bestGameLog
+        self.gameDisplay.replayCounter = 1
+        self.gameDisplay.update()
+        self.gameDisplay.enableInput = True
 
 
 if __name__ == '__main__':
@@ -159,7 +196,8 @@ if __name__ == '__main__':
     apple = yard.getApple()
     gameBoard = GameDisplay(snake, apple)
 
-    learner = QLearner(yard, 0.3, 0.9, 5000, 50, gameBoard)
-    controls = Controls(gameBoard, learner)
+    learner = QLearner(yard, EPSILON, GAMMA, TRAIN_EPOCHS,
+                       TEST_EPOCHS, gameBoard)
+    controls = Controls(gameBoard, learner, yard)
 
     sys.exit(app.exec_())
